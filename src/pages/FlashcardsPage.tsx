@@ -32,10 +32,12 @@ const initialDecks: Deck[] = [
 
 const FlashcardsPage = () => {
   const [decks, setDecks] = useState<Deck[]>(initialDecks);
-  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
+  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(decks.length > 0 ? decks[0].id : null);
 
   const handleAddDeck = (newDeck: Deck) => {
     setDecks([...decks, newDeck]);
+    // Automatically select newly added deck
+    setSelectedDeckId(newDeck.id);
   };
 
   const handleUpdateDeck = (updatedDeck: Deck) => {
@@ -45,10 +47,12 @@ const FlashcardsPage = () => {
   const handleDeleteDeck = (deckId: string) => {
     setDecks(decks.filter((deck) => deck.id !== deckId));
     if (selectedDeckId === deckId) {
-      setSelectedDeckId(null);
+      // If the selected deck is deleted, select the first available deck
+      setSelectedDeckId(decks.length > 1 ? decks.find(d => d.id !== deckId)?.id || null : null);
     }
   };
 
+  // Find the selected deck safely
   const selectedDeck = selectedDeckId 
     ? decks.find((deck) => deck.id === selectedDeckId) 
     : decks.length > 0 ? decks[0] : null;
@@ -57,10 +61,14 @@ const FlashcardsPage = () => {
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">Language Learning Flashcards</h1>
       
-      <Tabs defaultValue="decks" className="w-full">
+      <Tabs 
+        defaultValue="decks" 
+        className="w-full"
+        value={selectedDeck ? undefined : "decks"} // Force "decks" tab if no deck is selected
+      >
         <TabsList className="mb-4">
           <TabsTrigger value="decks">Manage Decks</TabsTrigger>
-          <TabsTrigger value="study" disabled={!selectedDeck}>Study</TabsTrigger>
+          <TabsTrigger value="study" disabled={!selectedDeck || (selectedDeck.cards.length === 0)}>Study</TabsTrigger>
         </TabsList>
         
         <TabsContent value="decks">
@@ -75,11 +83,15 @@ const FlashcardsPage = () => {
         </TabsContent>
         
         <TabsContent value="study">
-          {selectedDeck && (
+          {selectedDeck && selectedDeck.cards.length > 0 ? (
             <FlashcardStudy 
               deck={selectedDeck}
               onUpdateDeck={handleUpdateDeck}
             />
+          ) : (
+            <div className="text-center p-8">
+              <p>Please select a deck with cards to study.</p>
+            </div>
           )}
         </TabsContent>
       </Tabs>

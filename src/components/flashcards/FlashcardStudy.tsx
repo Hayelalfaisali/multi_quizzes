@@ -19,12 +19,18 @@ const FlashcardStudy = ({ deck, onUpdateDeck }: FlashcardStudyProps) => {
 
   // Set up study session
   useEffect(() => {
-    // Simple randomization of cards
-    const shuffledCards = [...deck.cards].sort(() => Math.random() - 0.5);
-    setStudyCards(shuffledCards);
-    setCurrentIndex(0);
-    setCompleted(false);
-    setIsFlipped(false);
+    if (deck && deck.cards && deck.cards.length > 0) {
+      // Simple randomization of cards
+      const shuffledCards = [...deck.cards].sort(() => Math.random() - 0.5);
+      setStudyCards(shuffledCards);
+      setCurrentIndex(0);
+      setCompleted(false);
+      setIsFlipped(false);
+    } else {
+      // Handle empty deck case
+      setStudyCards([]);
+      setCompleted(true);
+    }
   }, [deck.id]);
 
   const handleFlip = () => {
@@ -48,6 +54,11 @@ const FlashcardStudy = ({ deck, onUpdateDeck }: FlashcardStudyProps) => {
   };
 
   const updateCardProgress = (correct: boolean) => {
+    // Only proceed if we have valid cards
+    if (!studyCards.length || currentIndex >= studyCards.length) {
+      return;
+    }
+    
     const now = new Date();
     const currentCard = studyCards[currentIndex];
     const updatedCard = { 
@@ -82,10 +93,12 @@ const FlashcardStudy = ({ deck, onUpdateDeck }: FlashcardStudyProps) => {
   };
 
   const restartSession = () => {
-    setStudyCards([...deck.cards].sort(() => Math.random() - 0.5));
-    setCurrentIndex(0);
-    setIsFlipped(false);
-    setCompleted(false);
+    if (deck && deck.cards && deck.cards.length > 0) {
+      setStudyCards([...deck.cards].sort(() => Math.random() - 0.5));
+      setCurrentIndex(0);
+      setIsFlipped(false);
+      setCompleted(false);
+    }
   };
 
   if (deck.cards.length === 0) {
@@ -102,6 +115,16 @@ const FlashcardStudy = ({ deck, onUpdateDeck }: FlashcardStudyProps) => {
         <h2 className="text-2xl font-bold">Session Complete!</h2>
         <p>You've reviewed all {studyCards.length} cards in this deck.</p>
         <Button onClick={restartSession}>Study Again</Button>
+      </div>
+    );
+  }
+
+  // Guard clause to prevent accessing undefined cards
+  if (!studyCards || studyCards.length === 0 || currentIndex >= studyCards.length) {
+    return (
+      <div className="max-w-md mx-auto text-center p-8 space-y-4">
+        <p>Loading cards...</p>
+        <Button onClick={restartSession}>Try Again</Button>
       </div>
     );
   }
