@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import QuizPage from "./pages/QuizPage";
+import FlashcardsPage from "./pages/FlashcardsPage";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -20,7 +21,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<QuizPage />} />
+            <Route path="/" element={<FlashcardsPage />} />
+            <Route path="/quiz" element={<QuizPage />} />
             <Route path="/home" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
