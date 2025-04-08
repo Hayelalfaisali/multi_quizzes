@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useQuiz } from '../context/QuizContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -8,20 +8,25 @@ const QuizQuestion = () => {
   const { state, selectAnswer, nextQuestion } = useQuiz();
   const { currentQuestionIndex, questions, selectedAnswer, timeLeft } = state;
   const currentQuestion = questions[currentQuestionIndex];
+  const timerRef = useRef<number | null>(null);
   
   useEffect(() => {
-    const timer = setInterval(() => {
-      // Using dispatch here would be cleaner but we don't have access to it directly
-      // So we check if we need to move to next question
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // Set up new timer
+    timerRef.current = window.setInterval(() => {
       if (timeLeft <= 0) {
         nextQuestion();
       } else {
-        // We'll update the timer directly in the context
+        // This triggers the context's TIMER_TICK action
         const event = new CustomEvent('timer-tick');
         document.dispatchEvent(event);
       }
     }, 1000);
-
+    
     // Listen for custom timer tick event
     const handleTimerTick = () => {
       // This triggers the context's TIMER_TICK action
@@ -32,11 +37,14 @@ const QuizQuestion = () => {
 
     document.addEventListener('timer-tick', handleTimerTick);
     
+    // Clean up the timer and event listener when component unmounts
     return () => {
-      clearInterval(timer);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
       document.removeEventListener('timer-tick', handleTimerTick);
     };
-  }, [timeLeft, nextQuestion]);
+  }, [timeLeft, nextQuestion, state]);
 
   const progressValue = (timeLeft / 15) * 100;
   
